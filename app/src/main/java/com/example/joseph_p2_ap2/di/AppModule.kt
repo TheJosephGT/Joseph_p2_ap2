@@ -1,7 +1,10 @@
 package com.example.joseph_p2_ap2.di
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresExtension
 import com.example.joseph_p2_ap2.data.remote.GastoApi
+import com.example.joseph_p2_ap2.data.repository.GastosRepository
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -26,11 +29,18 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGastosApi(moshi: Moshi): GastoApi {
+    fun provideGastoApi(moshi: Moshi): GastoApi {
         return Retrofit.Builder()
-            .baseUrl("https://sag-api.azurewebsites.net")
+            .baseUrl("https://sag-api.azurewebsites.net/")
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(GastoApi::class.java)
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    @Provides
+    @Singleton
+    fun provideGastoRepository(gastoApi: GastoApi): GastosRepository {
+        return GastosRepository(gastoApi)
     }
 }

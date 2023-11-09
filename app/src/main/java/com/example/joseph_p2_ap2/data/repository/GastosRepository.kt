@@ -44,13 +44,12 @@ class GastosRepository @Inject constructor(private val api: GastoApi) {
         }
     }
 
-    suspend fun postGasto(gasto: GastoDTO) {
-        api.postGasto(gasto)
+    suspend fun postGasto(gasto: GastoDTO) = api.postGasto(gasto)
+    suspend fun deleteGasto(id: Int) : GastoDTO? {
+        return api.deleteGasto(id).body()
     }
-    suspend fun deleteGasto(id: Int, gasto: GastoDTO) {
-        api.deleteGasto(id, gasto)
-    }
-    suspend fun putGasto(id:Int, gasto: GastoDTO) {
-        api.putGasto(id, gasto)
+    suspend fun putGasto(id:Int, gasto: GastoDTO) : GastoDTO?{
+        api.putGasto(id = id, gasto = gasto)
+        return gasto
     }
 }

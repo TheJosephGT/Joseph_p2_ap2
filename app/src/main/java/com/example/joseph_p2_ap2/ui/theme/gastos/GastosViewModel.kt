@@ -34,21 +34,24 @@ data class GastoListState(
 
 data class GastoState(
     val isLoading: Boolean = false,
-    val gastos: GastoDTO? = null,
+    val gasto: GastoDTO? = null,
     val error: String = "",
 )
 
 @HiltViewModel
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
-class GastosViewModel @Inject constructor(private val gastosRepository: GastosRepository
-) : ViewModel(){
-    var idGasto by mutableIntStateOf(0)
+class GastosViewModel @Inject constructor(
+    private val gastosRepository: GastosRepository,
+) : ViewModel() {
+    var idGasto by mutableStateOf(0)
     var fecha by mutableStateOf("")
     var suplidor by mutableStateOf("")
     var ncf by mutableStateOf("")
     var concepto by mutableStateOf("")
-    var itbis by mutableIntStateOf(0)
-    var monto by mutableIntStateOf(0)
+    var itbis by mutableStateOf(0)
+    var monto by mutableStateOf(0)
+    var idSuplidor by mutableStateOf(0)
+    var descuento by mutableStateOf(0)
 
     var fechaError by mutableStateOf(true)
     var suplidorError by mutableStateOf(true)
@@ -56,17 +59,29 @@ class GastosViewModel @Inject constructor(private val gastosRepository: GastosRe
     var conceptoError by mutableStateOf(true)
     var itbisError by mutableStateOf(true)
     var montoError by mutableStateOf(true)
+    var idSuplidorError by mutableStateOf(true)
+    var descuentoError by mutableStateOf(true)
 
 
-    fun validar() : Boolean{
+    fun validar(): Boolean {
         fechaError = fecha.isNotEmpty()
         suplidorError = suplidor.isNotEmpty()
         ncfError = ncf.isNotEmpty()
         conceptoError = concepto.isNotEmpty()
         itbisError = itbis <= 0
         montoError = monto <= 0
+        idSuplidorError = idSuplidor <= 0
+        descuentoError = descuento <= 0
 
-        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis == 0 || monto == 0)
+        if (!idSuplidorError) println("IdSuplidor no es válido")
+        if (!conceptoError) println("Concepto no es válido")
+        if (!ncfError) println("NCF no es válido")
+        if (!itbisError) println("ITBIS no es válido")
+        if (!montoError) println("Monto no es válido")
+        if (!descuentoError) println("Descuento no es válido")
+        if (!fechaError) println("Fecha no es válido")
+
+        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis == 0 || monto == 0 || idSuplidor == 0 || descuento == 0)
 
     }
 
@@ -116,7 +131,9 @@ class GastosViewModel @Inject constructor(private val gastosRepository: GastosRe
                 ncf = ncf,
                 concepto = concepto,
                 itbis = itbis,
-                monto = monto
+                monto = monto,
+                idSuplidor = idSuplidor,
+                descuento = descuento
             )
             gastosRepository.postGasto(gasto)
             limpiar()
@@ -125,17 +142,27 @@ class GastosViewModel @Inject constructor(private val gastosRepository: GastosRe
 
     fun updateGasto() {
         viewModelScope.launch {
-            val gasto = GastoDTO(
-                idGasto = idGasto,
-                fecha = fecha,
-                suplidor = suplidor,
-                ncf = ncf,
-                concepto = concepto,
-                itbis = itbis,
-                monto = monto
-            )
-            gastosRepository.putGasto(idGasto,gasto)
-            limpiar()
+            if (idGasto != 0) {
+                val gasto = GastoDTO(
+                    idGasto = idGasto,
+                    fecha = fecha,
+                    suplidor = suplidor,
+                    ncf = ncf,
+                    concepto = concepto,
+                    itbis = itbis,
+                    monto = monto,
+                    idSuplidor = idSuplidor,
+                    descuento = descuento
+                )
+                gastosRepository.putGasto(idGasto, gasto)
+                limpiar()
+            }
+        }
+    }
+
+    fun deleteGasto(id: Int) {
+        viewModelScope.launch {
+            gastosRepository.deleteGasto(id)
         }
     }
 
@@ -147,17 +174,21 @@ class GastosViewModel @Inject constructor(private val gastosRepository: GastosRe
                 is Resource.Loading -> {
                     uiStateGasto.update { it.copy(isLoading = true) }
                 }
+
                 is Resource.Success -> {
                     uiStateGasto.update {
-                        it.copy(gastos = result.data)
+                        it.copy(gasto = result.data)
                     }
-                    fecha = uiStateGasto.value.gastos!!.fecha
-                    suplidor = uiStateGasto.value.gastos!!.suplidor
-                    ncf = uiStateGasto.value.gastos!!.ncf
-                    concepto = uiStateGasto.value.gastos!!.concepto
-                    itbis = uiStateGasto.value.gastos!!.itbis!!
-                    monto = uiStateGasto.value.gastos!!.monto!!
+                    fecha = uiStateGasto.value.gasto!!.fecha.toString()
+                    suplidor = uiStateGasto.value.gasto!!.suplidor.toString()
+                    ncf = uiStateGasto.value.gasto!!.ncf!!
+                    concepto = uiStateGasto.value.gasto!!.concepto.toString()
+                    itbis = uiStateGasto.value.gasto!!.itbis!!
+                    monto = uiStateGasto.value.gasto!!.monto!!
+                    idSuplidor = uiStateGasto.value.gasto!!.idSuplidor!!
+                    descuento = uiStateGasto.value.gasto!!.descuento!!
                 }
+
                 is Resource.Error -> {
                     uiStateGasto.update { it.copy(error = result.message ?: "Error desconocido") }
                 }
@@ -165,6 +196,15 @@ class GastosViewModel @Inject constructor(private val gastosRepository: GastosRe
         }.launchIn(viewModelScope)
     }
 
-    fun limpiar(){}
+    fun limpiar() {
+        fecha = ""
+        idSuplidor = 0
+        suplidor = ""
+        ncf = ""
+        concepto = ""
+        descuento = 0
+        itbis = 0
+        monto = 0
+    }
 
 }
