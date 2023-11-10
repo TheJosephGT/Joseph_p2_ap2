@@ -34,15 +34,9 @@ import javax.inject.Inject
 data class GastoListState(
     val isLoading: Boolean = false,
     val gastos: List<GastoDTO> = emptyList(),
-    val error: String = "",
-)
-
-data class GastoState(
-    val isLoading: Boolean = false,
     val gasto: GastoDTO? = null,
     val error: String = "",
 )
-
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -99,8 +93,6 @@ class GastosViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GastoListState())
     val uiState: StateFlow<GastoListState> = _uiState.asStateFlow()
 
-    val uiStateGasto = MutableStateFlow(GastoState())
-
     init {
         loadScreen()
     }
@@ -129,18 +121,6 @@ class GastosViewModel @Inject constructor(
         viewModelScope.launch {
             if (validar()) {
                 val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
-                if(suplidor == "CLARO")
-                    idSuplidor = 1
-                if(suplidor == "ALTICE")
-                    idSuplidor = 2
-                if(suplidor == "CLARO DOMINICANA")
-                    idSuplidor = 6
-                if(suplidor == "ALTICE DOMINICANA")
-                    idSuplidor = 7
-                if(suplidor == "TELEOPERADORA DEL NORDESTE SRL")
-                    idSuplidor = 8
-                if(suplidor == "VIEW COMUNICACIONES SRL")
-                    idSuplidor = 9
                 val gasto = GastoDTO(
                     fecha = fechaActual,
                     suplidor = suplidor,
@@ -148,7 +128,7 @@ class GastosViewModel @Inject constructor(
                     concepto = concepto,
                     itbis = itbis,
                     monto = monto,
-                    idSuplidor = idSuplidor,
+                    idSuplidor = getIdSuplidor(suplidor),
                     descuento = descuento
                 )
                 gastosRepository.postGasto(gasto)
@@ -158,23 +138,27 @@ class GastosViewModel @Inject constructor(
         }
     }
 
+    fun getIdSuplidor(suplidor: String): Int {
+        var idSuplidor = 0
+
+        when (suplidor) {
+            "CLARO" -> idSuplidor = 1
+            "ALTICE" -> idSuplidor = 2
+            "CLARO DOMINICANA" -> idSuplidor = 6
+            "ALTICE DOMINICANA" -> idSuplidor = 7
+            "TELEOPERADORA DEL NORDESTE SRL" -> idSuplidor = 8
+            "VIEW COMUNICACIONES SRL" -> idSuplidor = 9
+        }
+
+        return idSuplidor
+    }
+
     fun updateGasto() {
         viewModelScope.launch {
             if (validar()) {
                 val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
-                if(suplidor == "CLARO")
-                    idSuplidor = 1
-                if(suplidor == "ALTICE")
-                    idSuplidor = 2
-                if(suplidor == "CLARO DOMINICANA")
-                    idSuplidor = 6
-                if(suplidor == "ALTICE DOMINICANA")
-                    idSuplidor = 7
-                if(suplidor == "TELEOPERADORA DEL NORDESTE SRL")
-                    idSuplidor = 8
-                if(suplidor == "VIEW COMUNICACIONES SRL")
-                    idSuplidor = 9
-                val gastoEditado = uiStateGasto.value.gasto
+
+                val gastoEditado = _uiState.value.gasto
                 val gasto = GastoDTO(
                     idGasto = gastoEditado?.idGasto,
                     fecha = fecha,
@@ -183,10 +167,17 @@ class GastosViewModel @Inject constructor(
                     concepto = concepto,
                     itbis = itbis,
                     monto = monto,
-                    idSuplidor = idSuplidor,
+                    idSuplidor = getIdSuplidor(suplidor),
                     descuento = descuento
                 )
                 gastosRepository.putGasto(gasto.idGasto!!, gasto)
+                val updateGastos =
+                    _uiState.value.gastos.map { if (it.idGasto == gasto.idGasto) gasto else it }
+                _uiState.update { state ->
+                    state.copy(
+                        gastos = updateGastos, gasto = null
+                    )
+                }
                 limpiar()
                 loadScreen()
             }
@@ -206,25 +197,25 @@ class GastosViewModel @Inject constructor(
         gastosRepository.getGastoId(idGasto).onEach { result ->
             when (result) {
                 is Resource.Loading -> {
-                    uiStateGasto.update { it.copy(isLoading = true) }
+                    _uiState.update { it.copy(isLoading = true) }
                 }
 
                 is Resource.Success -> {
-                    uiStateGasto.update {
+                    _uiState.update {
                         it.copy(gasto = result.data)
                     }
-                    fecha = uiStateGasto.value.gasto!!.fecha
-                    suplidor = uiStateGasto.value.gasto!!.suplidor
-                    ncf = uiStateGasto.value.gasto!!.ncf
-                    concepto = uiStateGasto.value.gasto!!.concepto
-                    itbis = uiStateGasto.value.gasto!!.itbis!!
-                    monto = uiStateGasto.value.gasto!!.monto!!
-                    idSuplidor = uiStateGasto.value.gasto!!.idSuplidor
-                    descuento = uiStateGasto.value.gasto!!.descuento!!
+                    fecha = _uiState.value.gasto!!.fecha
+                    suplidor = _uiState.value.gasto!!.suplidor
+                    ncf = _uiState.value.gasto!!.ncf
+                    concepto = _uiState.value.gasto!!.concepto
+                    itbis = _uiState.value.gasto!!.itbis!!
+                    monto = _uiState.value.gasto!!.monto!!
+                    idSuplidor = _uiState.value.gasto!!.idSuplidor
+                    descuento = _uiState.value.gasto!!.descuento!!
                 }
 
                 is Resource.Error -> {
-                    uiStateGasto.update { it.copy(error = result.message ?: "Error desconocido") }
+                    _uiState.update { it.copy(error = result.message ?: "Error desconocido") }
                 }
             }
             loadScreen()
@@ -232,7 +223,6 @@ class GastosViewModel @Inject constructor(
     }
 
     fun limpiar() {
-        fecha = ""
         suplidor = ""
         ncf = ""
         concepto = ""

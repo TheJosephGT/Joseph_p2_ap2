@@ -30,14 +30,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,13 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.toSize
-import com.example.joseph_p2_ap2.data.remote.dto.Suplidor
-import com.example.joseph_p2_ap2.data.remote.dto.suplidores
-import java.util.Calendar
-import java.util.Date
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
@@ -274,7 +268,7 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
             ) {
                 Button(onClick = {
                     keyboardController?.hide()
-                    if (viewModel.uiStateGasto.value.gasto != null)
+                    if (viewModel.uiState.value.gasto != null)
                         viewModel.updateGasto()
                     else
                         viewModel.saveGasto()
