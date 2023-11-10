@@ -61,8 +61,6 @@ class GastosViewModel @Inject constructor(
     var conceptoError by mutableStateOf(true)
     var itbisError by mutableStateOf(true)
     var montoError by mutableStateOf(true)
-    var idSuplidorError by mutableStateOf(true)
-    var descuentoError by mutableStateOf(true)
 
 
     fun validar(): Boolean {
@@ -72,10 +70,7 @@ class GastosViewModel @Inject constructor(
         conceptoError = concepto.isNotEmpty()
         itbisError = itbis > 0
         montoError = monto > 0
-        //idSuplidorError = idSuplidor > 0
-        //descuentoError = descuento > 0
 
-//|| idSuplidor == 0 || descuento == 0
         return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis <= 0 || monto <= 0)
 
     }
@@ -98,7 +93,7 @@ class GastosViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(GastoListState())
     val uiState: StateFlow<GastoListState> = _uiState.asStateFlow()
 
-    private val uiStateGasto = MutableStateFlow(GastoState())
+    val uiStateGasto = MutableStateFlow(GastoState())
 
     init {
         loadScreen()
@@ -145,9 +140,10 @@ class GastosViewModel @Inject constructor(
 
     fun updateGasto() {
         viewModelScope.launch {
-            if (idGasto != 0) {
+            if (validar()) {
+                val gastoEditado = uiStateGasto.value.gasto
                 val gasto = GastoDTO(
-                    idGasto = idGasto,
+                    idGasto = gastoEditado?.idGasto,
                     fecha = fecha,
                     suplidor = suplidor,
                     ncf = ncf,
@@ -157,8 +153,9 @@ class GastosViewModel @Inject constructor(
                     idSuplidor = idSuplidor,
                     descuento = descuento
                 )
-                gastosRepository.putGasto(idGasto, gasto)
+                gastosRepository.putGasto(gasto.idGasto!!, gasto)
                 limpiar()
+                loadScreen()
             }
         }
     }
@@ -183,12 +180,14 @@ class GastosViewModel @Inject constructor(
                     uiStateGasto.update {
                         it.copy(gasto = result.data)
                     }
-                    fecha = uiStateGasto.value.gasto!!.fecha.toString()
-                    suplidor = uiStateGasto.value.gasto!!.suplidor.toString()
-                    ncf = uiStateGasto.value.gasto!!.ncf!!
-                    concepto = uiStateGasto.value.gasto!!.concepto.toString()
+                    fecha = uiStateGasto.value.gasto!!.fecha
+                    suplidor = uiStateGasto.value.gasto!!.suplidor
+                    ncf = uiStateGasto.value.gasto!!.ncf
+                    concepto = uiStateGasto.value.gasto!!.concepto
                     itbis = uiStateGasto.value.gasto!!.itbis!!
                     monto = uiStateGasto.value.gasto!!.monto!!
+                    idSuplidor = uiStateGasto.value.gasto!!.idSuplidor
+                    descuento = uiStateGasto.value.gasto!!.descuento!!
                 }
 
                 is Resource.Error -> {

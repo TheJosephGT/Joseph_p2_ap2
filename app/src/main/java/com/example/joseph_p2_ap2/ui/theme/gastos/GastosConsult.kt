@@ -36,7 +36,7 @@ import java.util.Locale
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
-fun Consult(gastos: List<GastoDTO>) {
+fun Consult(gastos: List<GastoDTO>, onUpdate: (GastoDTO) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -44,7 +44,7 @@ fun Consult(gastos: List<GastoDTO>) {
     ) {
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
             items(gastos) { gasto ->
-                GastoItem(gasto)
+                GastoItem(gasto, onUpdate = onUpdate)
             }
         }
     }
@@ -52,7 +52,7 @@ fun Consult(gastos: List<GastoDTO>) {
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
-fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
+fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel(), onUpdate: (GastoDTO) -> Unit) {
     val originalFormat = "yyyy-MM-dd'T'HH:mm:ss"
     val newFormat = "yyyy-MM-dd"
     val dateString = gasto.fecha
@@ -125,7 +125,9 @@ fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
                 .padding(vertical = 3.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(onClick = {  }) {
+            Button(onClick = { onUpdate(gasto)},
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Green,
+                    contentColor = Color.Black) ) {
                 Text("Modificar")
             }
             Spacer(modifier = Modifier.width(16.dp))

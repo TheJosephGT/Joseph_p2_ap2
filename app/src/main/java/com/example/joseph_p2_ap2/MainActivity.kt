@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavHost
 import com.example.joseph_p2_ap2.ui.theme.Joseph_p2_ap2Theme
 import com.example.joseph_p2_ap2.ui.theme.gastos.Consult
 import com.example.joseph_p2_ap2.ui.theme.gastos.GastosScreen
