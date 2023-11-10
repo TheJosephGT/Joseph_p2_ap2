@@ -73,10 +73,10 @@ class GastosViewModel @Inject constructor(
         suplidorError = suplidor.isNotEmpty()
         ncfError = ncf.isNotEmpty()
         conceptoError = concepto.isNotEmpty()
-        itbisError = itbis > 0
+        itbisError = itbis >= 0
         montoError = monto > 0
 
-        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis <= 0 || monto <= 0)
+        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis < 0 || monto <= 0)
 
     }
 
