@@ -131,7 +131,6 @@ fun GastoItem(
                 Text(
                     "$${gasto.monto}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.error,
                     fontSize = 25.sp
                 )
             }
