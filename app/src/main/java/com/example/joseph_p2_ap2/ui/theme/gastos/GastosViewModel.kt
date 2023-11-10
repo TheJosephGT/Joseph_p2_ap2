@@ -60,6 +60,7 @@ class GastosViewModel @Inject constructor(
     var descuento by mutableStateOf(50)
     val suplidorList = listOf("CLARO", "ALTICE", "CLARO DOMINICANA", "ALTICE DOMINICANA", "TELEOPERADORA DEL NORDESTE SRL", "VIEW COMUNICACIONES SRL")
 
+
     var fechaError by mutableStateOf(true)
     var suplidorError by mutableStateOf(true)
     var ncfError by mutableStateOf(true)
@@ -128,6 +129,18 @@ class GastosViewModel @Inject constructor(
         viewModelScope.launch {
             if (validar()) {
                 val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
+                if(suplidor == "CLARO")
+                    idSuplidor = 1
+                if(suplidor == "ALTICE")
+                    idSuplidor = 2
+                if(suplidor == "CLARO DOMINICANA")
+                    idSuplidor = 6
+                if(suplidor == "ALTICE DOMINICANA")
+                    idSuplidor = 7
+                if(suplidor == "TELEOPERADORA DEL NORDESTE SRL")
+                    idSuplidor = 8
+                if(suplidor == "VIEW COMUNICACIONES SRL")
+                    idSuplidor = 9
                 val gasto = GastoDTO(
                     fecha = fechaActual,
                     suplidor = suplidor,
@@ -149,6 +162,18 @@ class GastosViewModel @Inject constructor(
         viewModelScope.launch {
             if (validar()) {
                 val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
+                if(suplidor == "CLARO")
+                    idSuplidor = 1
+                if(suplidor == "ALTICE")
+                    idSuplidor = 2
+                if(suplidor == "CLARO DOMINICANA")
+                    idSuplidor = 6
+                if(suplidor == "ALTICE DOMINICANA")
+                    idSuplidor = 7
+                if(suplidor == "TELEOPERADORA DEL NORDESTE SRL")
+                    idSuplidor = 8
+                if(suplidor == "VIEW COMUNICACIONES SRL")
+                    idSuplidor = 9
                 val gastoEditado = uiStateGasto.value.gasto
                 val gasto = GastoDTO(
                     idGasto = gastoEditado?.idGasto,
@@ -202,6 +227,7 @@ class GastosViewModel @Inject constructor(
                     uiStateGasto.update { it.copy(error = result.message ?: "Error desconocido") }
                 }
             }
+            loadScreen()
         }.launchIn(viewModelScope)
     }
 
