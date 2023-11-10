@@ -1,6 +1,10 @@
 package com.example.joseph_p2_ap2.ui.theme.gastos
 
+import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Build
+import android.widget.DatePicker
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -13,12 +17,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -27,6 +34,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,10 +53,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.toSize
+import java.util.Calendar
+import java.util.Date
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -113,7 +125,8 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                     .weight(1f)
                     .padding(8.dp)
             ) {
-                OutlinedTextField(value = selectedItem,
+                OutlinedTextField(
+                    value = selectedItem,
                     onValueChange = {
                         selectedItem = it
                     },
@@ -122,7 +135,7 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                         .onGloballyPositioned { coordinates ->
                             textFiledSize = coordinates.size.toSize()
                         },
-                    label = { Text(text = "Suplidor")},
+                    label = { Text(text = "Suplidor") },
                     trailingIcon = {
                         Icon(icon, "", Modifier.clickable { expanded = !expanded })
                     },
@@ -132,11 +145,11 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                 DropdownMenu(expanded = expanded,
                     onDismissRequest = { expanded = false },
                     modifier = Modifier.width(
-                        with(LocalDensity.current) {textFiledSize.width.toDp()}
+                        with(LocalDensity.current) { textFiledSize.width.toDp() }
                     )
                 ) {
-                    viewModel.suplidorList.forEach{label ->
-                        DropdownMenuItem(text = { Text(text = label)}, onClick = {
+                    viewModel.suplidorList.forEach { label ->
+                        DropdownMenuItem(text = { Text(text = label) }, onClick = {
                             selectedItem = label
                             expanded = false
                             viewModel.suplidor = selectedItem
@@ -227,6 +240,7 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                 }
             }
         }
+
         Row {
             Column(
                 modifier = Modifier
@@ -248,23 +262,33 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        OutlinedButton(onClick = {
-            keyboardController?.hide()
-            if(viewModel.uiStateGasto.value.gasto != null)
-                viewModel.updateGasto()
-            else
-                viewModel.saveGasto()
-            viewModel.setMessageShown()
-            if(viewModel.validar())
-                selectedItem = ""
-        }, modifier = Modifier.fillMaxWidth())
-        {
-            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Guardar")
-            Text(text = "Guardar")
-        }
+        Row {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                Button(onClick = {
+                    keyboardController?.hide()
+                    if (viewModel.uiStateGasto.value.gasto != null)
+                        viewModel.updateGasto()
+                    else
+                        viewModel.saveGasto()
+                    viewModel.setMessageShown()
+                    if (viewModel.validar())
+                        selectedItem = ""
+                }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium)
+                {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Guardar")
+                    Text(text = "Guardar")
+                }
 
-        uiState.gastos?.let { gastos ->
-            Consult(gastos, onUpdate = {gastos -> gastos.idGasto?.let { viewModel.getGastoId(it) } })
+                uiState.gastos?.let { gastos ->
+                    Consult(
+                        gastos,
+                        onUpdate = { gastos -> gastos.idGasto?.let { viewModel.getGastoId(it) } })
+                }
+            }
         }
     }
 }

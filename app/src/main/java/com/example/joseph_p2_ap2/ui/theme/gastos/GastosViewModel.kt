@@ -1,6 +1,7 @@
 package com.example.joseph_p2_ap2.ui.theme.gastos
 
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresExtension
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -24,6 +25,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 
@@ -39,13 +43,14 @@ data class GastoState(
     val error: String = "",
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 class GastosViewModel @Inject constructor(
     private val gastosRepository: GastosRepository,
 ) : ViewModel() {
     var idGasto by mutableStateOf(0)
-    var fecha by mutableStateOf("")
+    var fecha by mutableStateOf(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
     var suplidor by mutableStateOf("")
     var ncf by mutableStateOf("")
     var concepto by mutableStateOf("")
@@ -99,6 +104,7 @@ class GastosViewModel @Inject constructor(
         loadScreen()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     fun loadScreen() {
         gastosRepository.getGastos().onEach { result ->
@@ -121,8 +127,9 @@ class GastosViewModel @Inject constructor(
     fun saveGasto() {
         viewModelScope.launch {
             if (validar()) {
+                val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
                 val gasto = GastoDTO(
-                    fecha = fecha,
+                    fecha = fechaActual,
                     suplidor = suplidor,
                     ncf = ncf,
                     concepto = concepto,
@@ -141,6 +148,7 @@ class GastosViewModel @Inject constructor(
     fun updateGasto() {
         viewModelScope.launch {
             if (validar()) {
+                val fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
                 val gastoEditado = uiStateGasto.value.gasto
                 val gasto = GastoDTO(
                     idGasto = gastoEditado?.idGasto,
