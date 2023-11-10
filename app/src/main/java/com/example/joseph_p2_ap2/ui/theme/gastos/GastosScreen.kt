@@ -69,6 +69,7 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
 
     var expanded by remember { mutableStateOf(false) }
     var selectedItem by remember { mutableStateOf("") }
+    selectedItem = viewModel.suplidor
     var textFiledSize by remember { mutableStateOf(Size.Zero) }
     val icon = if (expanded) {
         Icons.Filled.KeyboardArrowUp
