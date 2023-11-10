@@ -1,5 +1,7 @@
 package com.example.joseph_p2_ap2.ui.theme.gastos
 
+import android.os.Build
+import androidx.annotation.RequiresExtension
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,7 @@ import com.example.joseph_p2_ap2.util.Resource
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun Consult(gastos: List<GastoDTO>) {
     Column(
@@ -46,6 +50,7 @@ fun Consult(gastos: List<GastoDTO>) {
     }
 }
 
+@RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @Composable
 fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
     val originalFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -73,14 +78,14 @@ fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(3f)
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "$formattedDate",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f)
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text("${gasto.suplidor}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, fontSize = 30.sp)
 
@@ -104,7 +109,7 @@ fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     "$${gasto.monto}",
                     style = MaterialTheme.typography.bodyLarge,
@@ -125,7 +130,7 @@ fun GastoItem(gasto: GastoDTO, viewModel: GastosViewModel = hiltViewModel()) {
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(
-                onClick = {  },
+                onClick = { gasto.idGasto?.let { viewModel.deleteGasto(it) } },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
             ) {
                 Text("Eliminar")

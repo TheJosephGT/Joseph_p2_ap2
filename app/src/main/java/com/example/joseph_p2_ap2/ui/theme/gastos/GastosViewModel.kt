@@ -2,6 +2,7 @@ package com.example.joseph_p2_ap2.ui.theme.gastos
 
 import android.os.Build
 import androidx.annotation.RequiresExtension
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -50,8 +51,9 @@ class GastosViewModel @Inject constructor(
     var concepto by mutableStateOf("")
     var itbis by mutableStateOf(0)
     var monto by mutableStateOf(0)
-    var idSuplidor by mutableStateOf(0)
-    var descuento by mutableStateOf(0)
+    var idSuplidor by mutableStateOf(1)
+    var descuento by mutableStateOf(50)
+    val suplidorList = listOf("CLARO", "ALTICE", "CLARO DOMINICANA", "ALTICE DOMINICANA", "TELEOPERADORA DEL NORDESTE SRL", "VIEW COMUNICACIONES SRL")
 
     var fechaError by mutableStateOf(true)
     var suplidorError by mutableStateOf(true)
@@ -68,20 +70,13 @@ class GastosViewModel @Inject constructor(
         suplidorError = suplidor.isNotEmpty()
         ncfError = ncf.isNotEmpty()
         conceptoError = concepto.isNotEmpty()
-        itbisError = itbis <= 0
-        montoError = monto <= 0
-        idSuplidorError = idSuplidor <= 0
-        descuentoError = descuento <= 0
+        itbisError = itbis > 0
+        montoError = monto > 0
+        //idSuplidorError = idSuplidor > 0
+        //descuentoError = descuento > 0
 
-        if (!idSuplidorError) println("IdSuplidor no es válido")
-        if (!conceptoError) println("Concepto no es válido")
-        if (!ncfError) println("NCF no es válido")
-        if (!itbisError) println("ITBIS no es válido")
-        if (!montoError) println("Monto no es válido")
-        if (!descuentoError) println("Descuento no es válido")
-        if (!fechaError) println("Fecha no es válido")
-
-        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis == 0 || monto == 0 || idSuplidor == 0 || descuento == 0)
+//|| idSuplidor == 0 || descuento == 0
+        return !(fecha == "" || suplidor == "" || ncf == "" || concepto == "" || itbis <= 0 || monto <= 0)
 
     }
 
@@ -106,6 +101,11 @@ class GastosViewModel @Inject constructor(
     private val uiStateGasto = MutableStateFlow(GastoState())
 
     init {
+        loadScreen()
+    }
+
+    @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
+    fun loadScreen() {
         gastosRepository.getGastos().onEach { result ->
             when (result) {
                 is Resource.Loading -> {
@@ -125,18 +125,21 @@ class GastosViewModel @Inject constructor(
 
     fun saveGasto() {
         viewModelScope.launch {
-            val gasto = GastoDTO(
-                fecha = fecha,
-                suplidor = suplidor,
-                ncf = ncf,
-                concepto = concepto,
-                itbis = itbis,
-                monto = monto,
-                idSuplidor = idSuplidor,
-                descuento = descuento
-            )
-            gastosRepository.postGasto(gasto)
-            limpiar()
+            if (validar()) {
+                val gasto = GastoDTO(
+                    fecha = fecha,
+                    suplidor = suplidor,
+                    ncf = ncf,
+                    concepto = concepto,
+                    itbis = itbis,
+                    monto = monto,
+                    idSuplidor = idSuplidor,
+                    descuento = descuento
+                )
+                gastosRepository.postGasto(gasto)
+                limpiar()
+                loadScreen()
+            }
         }
     }
 
@@ -163,6 +166,7 @@ class GastosViewModel @Inject constructor(
     fun deleteGasto(id: Int) {
         viewModelScope.launch {
             gastosRepository.deleteGasto(id)
+            loadScreen()
         }
     }
 
@@ -185,8 +189,6 @@ class GastosViewModel @Inject constructor(
                     concepto = uiStateGasto.value.gasto!!.concepto.toString()
                     itbis = uiStateGasto.value.gasto!!.itbis!!
                     monto = uiStateGasto.value.gasto!!.monto!!
-                    idSuplidor = uiStateGasto.value.gasto!!.idSuplidor!!
-                    descuento = uiStateGasto.value.gasto!!.descuento!!
                 }
 
                 is Resource.Error -> {
@@ -198,11 +200,9 @@ class GastosViewModel @Inject constructor(
 
     fun limpiar() {
         fecha = ""
-        idSuplidor = 0
         suplidor = ""
         ncf = ""
         concepto = ""
-        descuento = 0
         itbis = 0
         monto = 0
     }

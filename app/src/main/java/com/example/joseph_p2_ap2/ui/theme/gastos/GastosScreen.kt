@@ -2,6 +2,7 @@ package com.example.joseph_p2_ap2.ui.theme.gastos
 
 import android.os.Build
 import androidx.annotation.RequiresExtension
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -40,16 +47,28 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.joseph_p2_ap2.util.Resource
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.toSize
 
 
 @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
-    val gastosResource by viewModel.gastos.collectAsState(initial = Resource.Loading())
-    val gastos = gastosResource.data
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val keyboardController = LocalSoftwareKeyboardController.current
+
+    var expanded by remember { mutableStateOf(false) }
+    var selectedItem by remember { mutableStateOf("") }
+    var textFiledSize by remember { mutableStateOf(Size.Zero) }
+    val icon = if (expanded) {
+        Icons.Filled.KeyboardArrowUp
+    } else {
+        Icons.Filled.KeyboardArrowDown
+    }
 
     LaunchedEffect(Unit) {
         viewModel.isMessageShownFlow.collectLatest { showMessage ->
@@ -66,9 +85,13 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        Text(text = "Registro de gastos", style = MaterialTheme.typography.titleLarge, modifier = Modifier
-            .padding(8.dp)
-            .align(Alignment.CenterHorizontally))
+        Text(
+            text = "Registro de gastos",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.CenterHorizontally)
+        )
         Row {
             Column(
                 modifier = Modifier
@@ -82,6 +105,9 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                     isError = true,
                     imeAction = ImeAction.Next
                 )
+                if (!viewModel.conceptoError) {
+                    Text(text = "El campo concepto esta vacío", color = Color.Red)
+                }
             }
         }
 
@@ -91,58 +117,42 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                     .weight(1f)
                     .padding(8.dp)
             ) {
-                CustomOutlinedTextField(
-                    value = viewModel.suplidor,
-                    onValueChange = { viewModel.suplidor = it},
-                    label = "Suplidor",
-                    isError = true,
-                    imeAction = ImeAction.Next
-                )
-            }
-
-            Spacer(modifier = Modifier.width(30.dp))
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = viewModel.idSuplidor.toString(),
-                    label = { Text(text = "idSuplidor") },
-                    singleLine = true,
+                OutlinedTextField(value = selectedItem,
                     onValueChange = {
-                        val newValue = it.toIntOrNull()
-                        if (newValue != null) {
-                            viewModel.idSuplidor = newValue
-                        }
+                        selectedItem = it
                     },
-                    modifier = Modifier.fillMaxWidth().width(200.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates ->
+                            textFiledSize = coordinates.size.toSize()
+                        },
+                    label = { Text(text = "Suplidor")},
+                    trailingIcon = {
+                        Icon(icon, "", Modifier.clickable { expanded = !expanded })
+                    },
+                    readOnly = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next)
                 )
+                DropdownMenu(expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.width(
+                        with(LocalDensity.current) {textFiledSize.width.toDp()}
+                    )
+                ) {
+                    viewModel.suplidorList.forEach{label ->
+                        DropdownMenuItem(text = { Text(text = label)}, onClick = {
+                            selectedItem = label
+                            expanded = false
+                            viewModel.suplidor = selectedItem
+                        })
+                    }
+                }
+                if (!viewModel.suplidorError) {
+                    Text(text = "El campo Suplidor esta vacío", color = Color.Red)
+                }
             }
         }
         Row {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
-            ) {
-
-                OutlinedTextField(
-                    value = viewModel.descuento.toString(),
-                    label = { Text(text = "Descuento") },
-                    singleLine = true,
-                    onValueChange = {
-                        val newValue = it.toIntOrNull()
-                        if (newValue != null) {
-                            viewModel.descuento = newValue
-                        }
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.width(30.dp))
-
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -150,11 +160,14 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
             ) {
                 CustomOutlinedTextField(
                     value = viewModel.ncf,
-                    onValueChange = { viewModel.ncf = it},
+                    onValueChange = { viewModel.ncf = it },
                     label = "Ncf",
                     isError = true,
                     imeAction = ImeAction.Next
                 )
+                if (!viewModel.ncfError) {
+                    Text(text = "El campo ncf esta vacío", color = Color.Red)
+                }
             }
         }
 
@@ -173,8 +186,18 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                         if (newValue != null) {
                             viewModel.itbis = newValue
                         }
-                    }
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
                 )
+                if (!viewModel.itbisError) {
+                    Text(
+                        text = "El campo itbis esta vacío o tiene un valor invalido",
+                        color = Color.Red
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(30.dp))
@@ -193,8 +216,18 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
                         if (newValue != null) {
                             viewModel.monto = newValue
                         }
-                    }
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
+                        keyboardType = KeyboardType.Number
+                    )
                 )
+                if (!viewModel.montoError) {
+                    Text(
+                        text = "El campo monto esta vacío o tiene un valor invalido",
+                        color = Color.Red
+                    )
+                }
             }
         }
         Row {
@@ -205,11 +238,14 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
             ) {
                 CustomOutlinedTextField(
                     value = viewModel.fecha,
-                    onValueChange = {viewModel.fecha = it },
+                    onValueChange = { viewModel.fecha = it },
                     label = "Fecha",
                     isError = true,
                     imeAction = ImeAction.Next
                 )
+                if (!viewModel.fechaError) {
+                    Text(text = "El campo fecha esta vacío", color = Color.Red)
+                }
             }
         }
 
@@ -219,14 +255,15 @@ fun GastosScreen(viewModel: GastosViewModel = hiltViewModel()) {
             keyboardController?.hide()
             viewModel.saveGasto()
             viewModel.setMessageShown()
+            selectedItem = ""
         }, modifier = Modifier.fillMaxWidth())
         {
             Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Guardar")
             Text(text = "Guardar")
         }
 
-        if (gastos != null) {
-            Consult(gastos = gastos)
+        uiState.gastos?.let { gastos ->
+            Consult(gastos)
         }
     }
 }
